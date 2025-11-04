@@ -15,7 +15,7 @@ Bem-vindo ao repositório do **Soul Hunter**, um jogo simples desenvolvido em Py
 Siga os passos abaixo para clonar o repositório e executar o jogo localmente.
 
 ### 1. Clonar o Repositório
-git clone [https://www.youtube.com/watch?v=RqfwLeY952s](https://www.youtube.com/watch?v=RqfwLeY952s)
+git clone https://github.com/Dev-Gabu/Soul-Hunter---Pygame.git
 cd Soul-Hunter---Pygame
 
 # Cria o ambiente virtual
