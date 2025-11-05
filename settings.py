@@ -4,6 +4,7 @@ import os
 LARGURA = 1280
 ALTURA = 720
 FPS = 60
+FANTASMAS_POR_RODADA = 3
 
 # Cores
 PRETO = (0, 0, 0)

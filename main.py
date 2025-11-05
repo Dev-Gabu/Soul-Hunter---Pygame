@@ -1,13 +1,19 @@
 import pygame
 import os
+import math
 
-from settings import LARGURA, ALTURA, FPS, PRETO, BRANCO
+from settings import LARGURA, ALTURA, FPS, PRETO, BRANCO, PASTA_ASSETS,FANTASMAS_POR_RODADA
 from souls import Fantasma
-from utils import carregar_imagem
+from utils import carregar_imagem, carregar_som
 
 def spawn_fantasma():
     novo_fantasma = Fantasma(fantasma_img)
     todos_sprites.add(novo_fantasma)
+
+def spawn_fantasma_wave(quantidade):
+    for _ in range(quantidade):
+        novo_fantasma = Fantasma(fantasma_img)
+        todos_sprites.add(novo_fantasma)
 
 # Inicialização
 pygame.init()
@@ -16,11 +22,25 @@ pygame.mouse.set_visible(False)
 TELA = pygame.display.set_mode((LARGURA, ALTURA))
 pygame.display.set_caption("Soul Hunter")
 
+# Carregamento de Assets
+
 fantasma_img = carregar_imagem('fantasma.png', (160, 160))
 fundo_img = carregar_imagem('background.png', (LARGURA, ALTURA))
 frontal_img = carregar_imagem('foreground.png', (LARGURA, ALTURA))
 mira_img = carregar_imagem('mira.png', (90, 90))
 graves_img = carregar_imagem('graves.png', (LARGURA, ALTURA))
+
+frontal_mask = pygame.mask.from_surface(frontal_img) if frontal_img else None
+graves_mask = pygame.mask.from_surface(graves_img) if graves_img else None
+
+som_tiro = carregar_som('kill.wav') 
+miss_sound = carregar_som('special.wav')
+
+try:
+    pygame.mixer.music.load(os.path.join(PASTA_ASSETS, 'sounds', 'soundtrack.ogg'))
+    pygame.mixer.music.play(-1)
+except pygame.error as e:
+    print(f"Erro ao carregar música: {e}")
 
 #Variáveis de controle do jogo
 score = 0
@@ -48,12 +68,38 @@ while rodando:
 
         if evento.type == pygame.MOUSEBUTTONDOWN:
             posicao_clique = evento.pos
+            tiro_acertou = False
+            
             for fantasma in todos_sprites:
                 if fantasma.rect.collidepoint(posicao_clique):
-                 
+                    
+                    if frontal_mask:
+                        offset_x = posicao_clique[0]
+                        offset_y = posicao_clique[1]
+                        
+                        if frontal_mask.get_at(posicao_clique):
+                            print("Tiro bloqueado pela Camada Frontal (Árvores)!")
+                            tiro_acertou = True
+                            if miss_sound:
+                                miss_sound.play()
+                            break 
+                            
+                    if graves_mask:
+                        if graves_mask.get_at(posicao_clique):
+                            print("Tiro bloqueado pela Camada Graves!")
+                            tiro_acertou = True
+                            if miss_sound:
+                                miss_sound.play()
+                            break
+                            
                     score += 10 
                     print(f"Acertou! Pontuação: {score}")
                     fantasma.kill()
+                    tiro_acertou = True
+                    
+                    if som_tiro:
+                        som_tiro.play()
+                        
                     break
 
     todos_sprites.update()
@@ -67,7 +113,7 @@ while rodando:
         if estado_spawn == "ESPERANDO":
             tempo_atual = pygame.time.get_ticks()
             if tempo_atual - tempo_ultimo_fantasma > INTERVALO_SPAWN * (1000 / FPS):
-                spawn_fantasma()
+                spawn_fantasma_wave(FANTASMAS_POR_RODADA)
                 estado_spawn = "AGUARDANDO"
     
     # D. Desenho/Renderização
